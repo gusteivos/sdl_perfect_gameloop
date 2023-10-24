@@ -4,6 +4,9 @@
 
     #include <inc_sdl2.h>
 
+    #include <cnanosleep.h>
+    #include <utils.h>
+
     #include <stdio.h>
     #include <stdbool.h>
 

@@ -7,6 +7,8 @@ SDL_Window *main_window = NULL;
 int main(int argc, char *argv[])
 {
 
+    init_cnanosleep();
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
     {
 
@@ -23,7 +25,7 @@ int main(int argc, char *argv[])
 
         fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
 
-        SDL_Quit();    
+        SDL_Quit();
 
 
         return 1;
@@ -31,37 +33,73 @@ int main(int argc, char *argv[])
     }
 
 
-    /*Temp: */    
-
-        bool is_running = true;
+    bool is_running = true;
 
 
-        SDL_Event main_window_event;
+    Uint64 freq = SDL_GetPerformanceFrequency();
 
-        while (is_running)
+    Uint64 lastTime = SDL_GetPerformanceCounter();
+
+    float deltaTime = 0.0f;
+
+    
+
+
+    SDL_Event main_window_event;
+
+    while (is_running)
+    {
+
+        struct timespec remaining, request = { 0, 1000000 };
+
+                                                //1458136
+
+        while (SDL_PollEvent(&main_window_event))
         {
 
-            while (SDL_PollEvent(&main_window_event))
+            if (main_window_event.type == SDL_QUIT)
             {
 
-                if (main_window_event.type == SDL_QUIT)
-                {
-
-                    is_running = false;
-
-                }
+                is_running = false;
 
             }
-            
-
-            SDL_Delay(1);
 
         }
+
+
+
+        UINT64 currentTime = SDL_GetPerformanceCounter();
+        deltaTime = (float)(currentTime - lastTime) / freq;
+        lastTime = currentTime;
         
-        SDL_DestroyWindow(main_window);
+        printf("delta time: %.9f\n", deltaTime);
+
+        float teste = (1.0f / 60.0f);
+
+        teste -= deltaTime;
+        
+        if (teste > 0)
+        {
+
+            request.tv_nsec = (long)(((float)request.tv_nsec) * (999 * teste));
+
+            // printf("delay time: %.9f\n", teste);
+            // printf("delay value %ld\n", request.tv_nsec);
+
+            // SDL_Delay(14);
+
+            cnanosleep(&request, NULL);
+
+        }
+
+    }
 
 
 exit:
+
+    quit_cnanosleep();
+
+    SDL_DestroyWindow(main_window);
 
     SDL_Quit();
 
